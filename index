@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Pontos de RPG</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #2B1F1A;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 2px solid #B3A083;
+            color: #2B1F1A;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            width: 50px;
+            text-align: center;
+            border: 2px solid #B3A083;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #B3A083;
+            color: #2B1F1A;
+            border: 2px solid #B3A083;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2B1F1A;
+            color: #B3A083;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        #attributesList {
+            list-style: none;
+            padding: 0;
+        }
+
+        #attributesList li {
+            margin: 5px 0;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #B3A083;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .attribute-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .attribute-controls button {
+            padding: 5px;
+            margin: 0 5px;
+            font-size: 16px;
+            width: 30px;
+            border: 2px solid #B3A083;
+            border-radius: 4px;
+            background: #B3A083;
+            color: #2B1F1A;
+        }
+
+        .attribute-controls button:hover {
+            background: #2B1F1A;
+            color: #B3A083;
+        }
+
+        .attribute-value {
+            width: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Pontos de RPG</h1>
+        <form id="levelForm">
+            <label for="level">Nível do Personagem:</label>
+            <input type="number" id="level" name="level" min="1" required>
+            <button type="submit">Calcular Pontos</button>
+        </form>
+        <div id="results">
+            <h2>Pontos Disponíveis: <span id="totalPoints">0</span></h2>
+            <ul id="attributesList">
+                <!-- Atributos serão inseridos aqui pelo JavaScript -->
+            </ul>
+        </div>
+    </div>
+    <script>
+        document.getElementById('levelForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const level = parseInt(document.getElementById('level').value);
+            const totalPoints = 30 + (2 * level);
+
+            document.getElementById('totalPoints').innerText = totalPoints;
+
+            const attributes = [
+                { name: 'Vitalidade', base: 5, current: 5 },
+                { name: 'Energia', base: 5, current: 5 },
+                { name: 'Força', base: -10, current: -10 },
+                { name: 'Agilidade', base: -10, current: -10 },
+                { name: 'Resistência', base: -10, current: -10 },
+                { name: 'Inteligência', base: -10, current: -10 },
+                { name: 'Carisma', base: -10, current: -10 },
+                { name: 'Conhecimento', base: -10, current: -10 }
+            ];
+
+            const attributesList = document.getElementById('attributesList');
+            attributesList.innerHTML = '';
+
+            attributes.forEach((attribute, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    ${attribute.name}:
+                    <div class="attribute-controls">
+                        <button id="decrement-${index}" onmousedown="startUpdatingAttribute(${index}, -1)" onmouseup="stopUpdatingAttribute()" onmouseleave="stopUpdatingAttribute()">-</button>
+                        <span class="attribute-value" id="attribute-${index}">${attribute.name === 'Vitalidade' || attribute.name === 'Energia' ? attribute.current * 10 : attribute.current}</span>
+                        <button id="increment-${index}" onmousedown="startUpdatingAttribute(${index}, 1)" onmouseup="stopUpdatingAttribute()" onmouseleave="stopUpdatingAttribute()">+</button>
+                    </div>
+                `;
+                attributesList.appendChild(listItem);
+            });
+
+            let updateInterval;
+
+            window.startUpdatingAttribute = function(index, delta) {
+                updateAttribute(index, delta);
+                updateInterval = setInterval(() => updateAttribute(index, delta), 100);
+            };
+
+            window.stopUpdatingAttribute = function() {
+                clearInterval(updateInterval);
+            };
+
+            function updateAttribute(index, delta) {
+                const attribute = attributes[index];
+                const newValue = attribute.current + delta;
+                const totalSpent = attributes.reduce((acc, attr) => acc + (attr.current - attr.base), 0);
+                const remainingPoints = totalPoints - totalSpent;
+
+                if (newValue >= attribute.base && remainingPoints >= delta) {
+                    attribute.current = newValue;
+                    document.getElementById(`attribute-${index}`).innerText = attribute.name === 'Vitalidade' || attribute.name === 'Energia' ? attribute.current * 10 : attribute.current;
+                    document.getElementById('totalPoints').innerText = totalPoints - attributes.reduce((acc, attr) => acc + (attr.current - attr.base), 0);
+                }
+            };
+        });
+    </script>
+</body>
+</html>
